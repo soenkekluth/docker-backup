@@ -1,4 +1,8 @@
 # docker-backup
 
 
-`backup <container> [out]`
+## Install
+`npm i -g docker-backup`
+
+## Usage
+`docker-backup backup <container> [out]`
