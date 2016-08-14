@@ -5,7 +5,46 @@ var cmd = require('node-cmd');
 
 
 program
-  .version('0.0.1')
+  .version('0.0.1');
+
+
+program
+  .command('container')
+  .description('run setup commands for all envs')
+  // .option("-s, --setup_mode [mode]", "Which setup mode to use")
+  .action(function() {
+    cmd.get(
+      'docker ps -a',
+      function(data) {
+        console.log(data);
+      }
+    );
+  })
+
+
+program
+  .command('images')
+  .action(function() {
+    cmd.get(
+      'docker images',
+      function(images) {
+        console.log(images);
+      }
+    );
+  });
+
+program
+  .command('volumes')
+  .action(function() {
+    cmd.get(
+      'docker volume ls',
+      function(data) {
+        console.log(data);
+      }
+    );
+  });
+
+program
   .command('backup <container> [out]')
   .action(function(container, out) {
 
