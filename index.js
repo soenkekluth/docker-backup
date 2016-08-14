@@ -45,18 +45,18 @@ program
   });
 
 program
-  .command('backup <container> [out]')
-  .action(function(container, out) {
+  .command('backup <container> [path]')
+  .action(function(container, path) {
 
-    out = out || '$(pwd)';
-    console.log('backup ' + container + ' to ' + out);
+    path = path || '$(pwd)';
+    console.log('backup ' + container + ' to ' + path);
 
-    var containerName = container + '_container';
+    var containerName = container + '_image';
 
     cmd.get(
       'docker commit -p ' + container + ' ' + containerName,
       function(data) {
-        cmd.get('docker save -o ' + out + '/' + containerName + '.tar ' + containerName,
+        cmd.get('docker save -o ' + path + '/' + containerName + '.tar ' + containerName,
           function(data) {
 
             cmd.get(
@@ -66,10 +66,10 @@ program
                   data = JSON.parse(data)[0];
                   if (data.Mounts && data.Mounts.length) {
 
-                    var command = 'docker run --rm --volumes-from ' + container + ' -v ' + out + ':/backup alpine';
+                    var command = 'docker run --rm --volumes-from ' + container + ' -v ' + path + ':/backup alpine';
 
                     data.Mounts.forEach(function(volume) {
-                      command += ' tar cvf /backup/' + container + '_volume_' + volume.Name + '.tar ' + volume.Destination;
+                      command += ' tar cvf /backup/' + container + '_volume' + /*'_' + volume.Name + */ '.tar ' + volume.Destination;
                     });
 
                     cmd.run(command);
@@ -77,11 +77,40 @@ program
                 }
               }
             );
-
           }
         );
       }
     );
   });
+
+program
+  .command('restore <container> [path]')
+  .action(function(container, path) {
+    path = path || '$(pwd)';
+
+
+    console.log('restore ' + container + ' from ' + path);
+
+    //var command = 'docker run --rm --volumes-from ' + container + ' -v $(pwd):/backup ' + container + '_image' + ' bash -c "cd /';
+
+    cmd.get(
+      'docker load < ' + path + '/' + container + '_image.tar',
+      // 'docker create < ' + path + '/' + container + '_image.tar',
+      function(data) {
+        cmd.get(
+          // 'docker run --rm --volumes-from ' + container + ' -v ' + path + ':/backup ' + container + '_image' + ' bash -c "cd / && tar xvf /backup/' + container + '_volume.tar"',
+          // 'docker run --rm -v ' + path + ':/backup --name ' + container + ' ' + container + '_image' + ' bash -c "cd / && tar xvf /backup/' + container + '_volume.tar"',
+          'docker run  -v ' + path + ':/backup --name ' + container + ' ' + container + '_image' + ' bash -c "cd / && tar xvf /backup/' + container + '_volume.tar"',
+          function(data) {
+            console.log(data);
+          });
+      });
+
+
+
+
+  });
+
+
 
 program.parse(process.argv);
