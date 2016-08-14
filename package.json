@@ -1,0 +1,23 @@
+{
+  "name": "docker-backup",
+  "version": "0.0.1",
+  "description": "backup docker container with its volumes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soenkekluth/docker-backup.git"
+  },
+  "author": "Sönke Kluth <soenke.kluth@gmail.com> (http://soenkekluth.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/soenkekluth/docker-backup/issues"
+  },
+  "homepage": "https://github.com/soenkekluth/docker-backup#readme",
+  "dependencies": {
+    "commander": "2.9.0",
+    "node-cmd": "1.1.1"
+  }
+}
