@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var program = require('commander');
 var cmd = require('node-cmd');
 
@@ -16,7 +18,7 @@ program
       'docker commit -p ' + container + ' ' + containerName,
       function(data) {
         cmd.get('docker save -o ' + out + '/' + containerName + '.tar ' + containerName,
-          function(data){
+          function(data) {
 
             cmd.get(
               'docker inspect ' + container,
@@ -41,30 +43,6 @@ program
         );
       }
     );
-
-    // cmd.run('docker commit -p ' + container + ' ' + containerName).then(function(){console.log('huaaa')});
-    // cmd.run('docker save -o ' + out + '/' + containerName + '.tar ' + containerName);
-    // console.log('docker save -o ' + out + '/' + containerName + '.tar ' + containerName);
-
-
   });
 
 program.parse(process.argv);
-
-
-
-// http://nodejs.org/api.html#_child_processes
-
-// var exec = require('child_process').exec;
-// var child;
-// // executes `pwd`
-// child = exec("docker inspect test-ghost", function (error, stdout, stderr) {
-
-//   var data = JSON.parse(stdout)[0];
-
-//   console.dir(data.Mounts);
-//   // console.log('stderr: ' + stderr);
-//   if (error !== null) {
-//     console.log('exec error: ' + error);
-//   }
-// });

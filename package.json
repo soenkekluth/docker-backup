@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "backup docker container with its volumes",
   "main": "index.js",
+  "bin": {
+    "docker-backup": "./index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
