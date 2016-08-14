@@ -5,4 +5,10 @@
 `npm i -g docker-backup`
 
 ## Usage
-`docker-backup backup <container> [out]`
+
+### Backup
+`docker-backup backup <container> [path]`
+
+
+### Restore
+`docker-backup restore <container> [path]`
