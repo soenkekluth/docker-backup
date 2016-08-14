@@ -1,5 +1,6 @@
 # docker-backup
 
+backup a docker container including its volumes
 
 ## Install
 `npm i -g docker-backup`
