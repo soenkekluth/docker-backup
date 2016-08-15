@@ -2,11 +2,10 @@
 
 var program = require('commander');
 var cmd = require('node-cmd');
-
+var path = require('path');
 
 program
   .version('0.0.1');
-
 
 program
   .command('container')
@@ -19,8 +18,7 @@ program
         console.log(data);
       }
     );
-  })
-
+  });
 
 program
   .command('images')
@@ -45,18 +43,18 @@ program
   });
 
 program
-  .command('backup <container> [path]')
-  .action(function(container, path) {
+  .command('backup <container> [dest]')
+  .action(function(container, dest) {
 
-    path = path || '$(pwd)';
-    console.log('backup ' + container + ' to ' + path);
+    dest = dest || '$(pwd)';
+    console.log('backup ' + container + ' to ' + dest);
 
     var containerName = container + '_image';
 
     cmd.get(
       'docker commit -p ' + container + ' ' + containerName,
       function(data) {
-        cmd.get('docker save -o ' + path + '/' + containerName + '.tar ' + containerName,
+        cmd.get('docker save -o ' + dest + '/' + containerName + '.tar ' + containerName,
           function(data) {
 
             cmd.get(
@@ -66,7 +64,7 @@ program
                   data = JSON.parse(data)[0];
                   if (data.Mounts && data.Mounts.length) {
 
-                    var command = 'docker run --rm --volumes-from ' + container + ' -v ' + path + ':/backup alpine';
+                    var command = 'docker run --rm --volumes-from ' + container + ' -v ' + dest + ':/backup alpine';
 
                     data.Mounts.forEach(function(volume) {
                       command += ' tar cvf /backup/' + container + '_volume' + /*'_' + volume.Name + */ '.tar ' + volume.Destination;
@@ -84,33 +82,45 @@ program
   });
 
 program
-  .command('restore <container> [path]')
-  .action(function(container, path) {
-    path = path || '$(pwd)';
+  .command('restore <src> [container]')
+  .action(function(src, container) {
 
 
-    console.log('restore ' + container + ' from ' + path);
+    if (src.indexOf('_image.tar') > 0) {
 
-    //var command = 'docker run --rm --volumes-from ' + container + ' -v $(pwd):/backup ' + container + '_image' + ' bash -c "cd /';
+      cmd.get(
+        'docker load < ' + src,
+        function(data) {
+          console.log(data);
+        });
 
-    cmd.get(
-      'docker load < ' + path + '/' + container + '_image.tar',
-      // 'docker create < ' + path + '/' + container + '_image.tar',
-      function(data) {
-        cmd.get(
-          // 'docker run --rm --volumes-from ' + container + ' -v ' + path + ':/backup ' + container + '_image' + ' bash -c "cd / && tar xvf /backup/' + container + '_volume.tar"',
-          // 'docker run --rm -v ' + path + ':/backup --name ' + container + ' ' + container + '_image' + ' bash -c "cd / && tar xvf /backup/' + container + '_volume.tar"',
-          'docker run  -v ' + path + ':/backup --name ' + container + ' ' + container + '_image' + ' bash -c "cd / && tar xvf /backup/' + container + '_volume.tar"',
-          function(data) {
-            console.log(data);
-          });
-      });
+    } else if (src.indexOf('_volume.tar') > 0) {
 
+      var dir = path.dirname(src);
+      var baseName = path.basename(src);
+      var containerName = container || baseName.substr(0, baseName.indexOf('_'));
+      console.log('containerName', containerName);
+      console.log('docker run --rm --volumes-from ' + containerName + ' -v ' + dir + ':/backup some-ghost_image bash -c "cd / && tar xvf /backup/' + baseName + '"');
 
+      cmd.get(
+        'docker inspect ' + containerName,
+        function(data) {
+          if (data) {
+            data = JSON.parse(data)[0];
+            var image = data.Config.Image;
 
+            cmd.get(
+              'docker run --rm --volumes-from ' + containerName + ' -v ' + dir + ':/backup ' + image + ' bash -c "cd / && tar xvf /backup/' + baseName + '"',
+              function(data) {
+                console.log('data', data);
+              });
+
+          }
+        }
+      );
+
+    }
 
   });
-
-
 
 program.parse(process.argv);
