@@ -18,9 +18,10 @@ backup a docker container including its volumes
 
 
 ## Example
-```docker run --name some-ghost -p 8080:2368 -d ghost```
 
-```docker stop some-ghost```
+``docker run --name some-ghost -p 8080:2368 -d ghost``
+
+``docker stop some-ghost``
 
 ``docker-backup backup some-ghost``
 
@@ -28,7 +29,10 @@ backup a docker container including its volumes
 
 ``docker-backup restore $(pwd)/some-ghost_image.tar``
 
-
 ``docker run --name some-ghost -p 8080:2368 -d some-ghost_image``
 
+``docker stop some-ghost``
+
 ``docker-backup restore $(pwd)/some-ghost_volume.tar some-ghost``
+
+``docker start some-ghost``
