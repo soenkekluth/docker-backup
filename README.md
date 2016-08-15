@@ -30,4 +30,5 @@ backup a docker container including its volumes
 
 
 ``docker run --name some-ghost -p 8080:2368 -d some-ghost_image``
-`docker-backup restore $(pwd)/some-ghost_volume.tar some-ghost`
+
+``docker-backup restore $(pwd)/some-ghost_volume.tar some-ghost``
