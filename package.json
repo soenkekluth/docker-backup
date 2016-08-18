@@ -1,6 +1,6 @@
 {
   "name": "docker-backup",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "backup docker container with its volumes",
   "main": "index.js",
   "bin": {

@@ -46,7 +46,8 @@ program
   .command('backup <container> [dest]')
   .action(function(container, dest) {
 
-    dest = dest || '$(pwd)';
+    dest = dest || './';
+    dest = path.resolve(dest);
     console.log('backup ' + container + ' to ' + dest);
 
     var containerName = container + '_image';
@@ -67,10 +68,13 @@ program
                     var command = 'docker run --rm --volumes-from ' + container + ' -v ' + dest + ':/backup alpine';
 
                     data.Mounts.forEach(function(volume) {
-                      command += ' tar cvf /backup/' + container + '_volume' + /*'_' + volume.Name + */ '.tar ' + volume.Destination;
+                      if (volume.Name) {
+                        command += ' tar cvf /backup/' + container + '_volume_' + volume.Name + '.tar ' + volume.Destination;
+                      }
                     });
 
                     cmd.run(command);
+                    // cmd.run('docker logs docker-backup');
                   }
                 }
               }
