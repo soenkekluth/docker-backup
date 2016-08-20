@@ -48,15 +48,15 @@ const backupVolumes = (container, volumes, dest) => {
     var command = 'docker run --rm --volumes-from ' + container + ' -v ' + dest + ':/backup alpine';
 
     volumes.forEach(function(volume) {
-      if (volume.Name) {
-        command += ' tar cvf /backup/' + container + '_volume_' + volume.Name + '.tar ' + volume.Destination;
+      if (volume.Source.indexOf('docker.sock') === -1) {
+        const name = volume.Name || volume.Source.split('/').join('_');
+        command += ' tar cvf /backup/' + container + '_volume_' + name + '.tar ' + volume.Destination;
       }
     });
 
     cmd.get(command, resolve);
   });
-
-}
+};
 
 
 // program
@@ -133,8 +133,7 @@ program
       inspect(containerName)
         .then(config => {
           var image = config.Config.Image;
-          console.log(image);
-          cmd.get('docker run --rm --volumes-from ' + containerName + ' -v ' + dir + ':/backup '+ image +' bash -c "cd / && tar xvf /backup/' + baseName + '"', console.log);
+          cmd.get('docker run --rm --volumes-from ' + containerName + ' -v ' + dir + ':/backup ' + image + ' bash -c "cd / && tar xvf /backup/' + baseName + '"', console.log);
         });
     }
   });
