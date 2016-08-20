@@ -18,39 +18,43 @@ const commit = (container, imageName) =>
 
 const backupImage = (imageName, dest) =>
   new Promise((resolve, reject) =>
-    cmd.get('docker save -o ' + dest + '/' + imageName + '.tar ' + imageName, resolve));
+    cmd.get('docker save -o ' + path.resolve(dest , imageName + '.tar') +' '+ imageName, resolve));
 
 
-const backupRunCommand = (container, dest) => {
+const backupRunCommand = (container, containerName, dest) => {
   rekcod(container, (err, run) => {
     if (err) {
       Promise.reject(err);
       return console.error(err);
     }
+
+    console.log(path.resolve(dest , containerName + '_run.sh'));
     var sript = '#!/bin/bash\n\n';
     sript += run[0].command;
-    cmd.get('echo "' + sript + '" > ' + dest + '/' + container + '_run.sh', () => {
-      cmd.run('chmod +x ' + dest + '/' + container + '_run.sh');
-      console.log('\n\nwriting run script to ' + dest + '/' + container + '_run.sh');
-      console.log('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + container + '_image');
+    cmd.get('echo "' + sript + '" > ' + path.resolve(dest , containerName + '_run.sh'), () => {
+      cmd.run('chmod +x ' + path.resolve(dest , containerName + '_run.sh'));
+      console.log('\n\nwriting run script to ' + dest + '/' + containerName + '_run.sh');
+      console.log('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + containerName + '_image');
     });
     Promise.resolve(sript);
   });
 };
 
 
-const backupVolumes = (container, volumes, dest) => {
+const backupVolumes = (container, containerName, volumes, dest) => {
   if (!volumes) {
     return Promise.resolve();
   }
+
+  containerName = containerName || container;
 
   return new Promise((resolve, reject) => {
     var command = 'docker run --rm --volumes-from ' + container + ' -v ' + dest + ':/backup alpine';
 
     volumes.forEach(function(volume) {
       if (volume.Source.indexOf('docker.sock') === -1) {
-        const name = volume.Name || volume.Source.split('/').join('_');
-        command += ' tar cvf /backup/' + container + '_volume_' + name + '.tar ' + volume.Destination;
+        const volumeName = volume.Name || volume.Source.split('/').join('_');
+        command += ' tar cvf /backup/' + containerName + '_volume_' + volumeName + '.tar ' + volume.Destination;
       }
     });
 
@@ -85,8 +89,11 @@ const backupVolumes = (container, volumes, dest) => {
 //   .action(cmd.get('docker volume ls', console.log));
 
 program
-  .command('backup <container> [dest]')
-  .action((container, dest) => {
+  // .command('backup <container> [dest]')
+  .arguments('<container> [dest]')
+  .description('run setup commands for all envs')
+  .option('-n, --name [name]', 'name')
+  .action((container, dest, options) => {
 
     dest = dest || './';
     dest = path.resolve(dest);
@@ -96,21 +103,24 @@ program
     var containerConfig;
     var containerName;
     var imageName;
+    var volumes;
 
     inspect(container)
       .then(config => {
         containerConfig = config;
-        containerName = String(containerConfig.Name).split('/').join('');
+        container = String(containerConfig.Name).split('/').join('');
+        containerName = options.name || container;
         imageName = containerName + '_image';
+        volumes = containerConfig.Mounts;
 
-        cmd.run('echo "' + JSON.stringify(config, null, 2) + '" > ' + dest + '/' + containerName + '_config.json');
+        cmd.run('echo "' + JSON.stringify(config, null, 2) + '" > ' + path.resolve( dest, containerName + '_config.json'));
 
-        commit(containerName, imageName)
+        commit(container, imageName)
           .then(backupImage(imageName, dest))
-          .then(backupVolumes(containerName, containerConfig.Mounts, dest))
-          .then(backupRunCommand(containerName, dest));
+          .then(backupVolumes(container, containerName, volumes, dest))
+          .then(backupRunCommand(container, containerName, dest));
       });
-  });
+  })
 
 
 program
