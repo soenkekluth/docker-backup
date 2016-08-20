@@ -1,19 +1,10 @@
 # OS or Editor folders
 .DS_Store
-Thumbs.db
-.cache
-.project
-.settings
-.tmproj
 *.sublime-project
 *.sublime-workspace
-.idea
-npm-debug.log
 .tern-port
 
 # Project folders to ignore
 node_modules
-/dist
-/build
-/bower_components
+/backup
 /TODO
