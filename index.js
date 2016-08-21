@@ -4,7 +4,7 @@
 
 const program = require('commander');
 const path = require('path');
-const rekcod = require('rekcod');
+const rekcod = require('./lib/rekcod-custom');
 const shell = require('shelljs');
 
 const inspect = (container) => {
@@ -81,22 +81,22 @@ const backupImage = (imageName, dest) => {
   });
 };
 
-const backupRunCommand = (container, containerName, dest) => {
-  rekcod(container, (err, run) => {
+const backupCreateCommand = (container, containerName, imageName, dest) => {
+  rekcod(container, containerName, imageName,  (err, run) => {
     if (err) {
       Promise.reject(err);
       return console.error(err);
     }
 
-    // console.log(path.resolve(dest, containerName + '_run.sh'));
+    // console.log(path.resolve(dest, containerName + '_create.sh'));
     var script = '#!/bin/bash\n\n';
     script += run[0].command;
 
-    shell.touch(path.resolve(dest, containerName + '_run.sh'));
-    shell.exec('echo "' + script + '" > ' + path.resolve(dest, containerName + '_run.sh'), { silent: true });
-    shell.chmod('+x', path.resolve(dest, containerName + '_run.sh'));
-    shell.echo('\n\nwriting run script to ' + dest + '/' + containerName + '_run.sh');
-    shell.echo('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + containerName + '_image');
+    shell.touch(path.resolve(dest, containerName + '_create.sh'));
+    shell.exec('echo "' + script + '" > ' + path.resolve(dest, containerName + '_create.sh'), { silent: true });
+    shell.chmod('+x', path.resolve(dest, containerName + '_create.sh'));
+    // shell.echo('\n\nwriting run script to ' + dest + '/' + containerName + '_create.sh');
+    // shell.echo('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + containerName + '_image');
     return true;
   });
 };
@@ -168,7 +168,7 @@ program
       .then(() => pause(container))
       .then(() => backupVolumes(container, containerName, volumes, dest))
       .then(() => unpause(container))
-      .then(() => backupRunCommand(container, containerName, dest));
+      .then(() => backupCreateCommand(container, containerName, imageName, dest));
   });
 
 program
@@ -182,7 +182,8 @@ program
 
     if (src.indexOf('_image.tar') > 0) {
       shell.exec('docker load -i ' + src);
-    } else if (src.indexOf('_run.sh') > 0) {
+    } else if (src.indexOf('_create.sh') > 0) {
+      shell.exec(src);
       // cmd.get('bash ' + src, console.log);
     } else if (src.indexOf('_volume_') > 0) {
 

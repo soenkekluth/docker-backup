@@ -13,6 +13,9 @@ backup a docker container including its volumes
 ### Restore Image
 `docker-backup restore <path-to-image.tar>`
 
+### Restore Container
+`docker-backup restore <path-to_create.sh>`
+
 ### Restore Volume
 `docker-backup restore <path-to-volume.tar> [container name]`
 
@@ -25,8 +28,8 @@ backup a docker container including its volumes
 
 ``docker-backup restore /backups/ghost-backup_image.tar``
 
-``docker create --name new-ghost -p 8080:2368 ghost-backup_image``
+``docker-backup restore /backups/ghost-backup_create.sh``
 
-``docker-backup restore /backups/ghost-backup_volume_xx.tar new-ghost``
+``docker-backup restore /backups/ghost-backup_volume_xx.tar ghost-backup``
 
-``docker start new-ghost``
+``docker start ghost-backup``
