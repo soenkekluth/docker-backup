@@ -21,6 +21,56 @@ const inspect = (container) => {
   });
 };
 
+
+
+const pause = (container) => {
+
+  return new Promise((resolve, reject) => {
+    shell.exec('docker pause ' + container, (code, stdout, stderr) => {
+
+      resolve();
+
+    });
+  });
+};
+
+
+const stop = (container) => {
+
+  return new Promise((resolve, reject) => {
+    shell.exec('docker stop ' + container, (code, stdout, stderr) => {
+
+      resolve();
+
+    });
+  });
+};
+
+const start = (container) => {
+
+  return new Promise((resolve, reject) => {
+    shell.exec('docker start ' + container, (code, stdout, stderr) => {
+
+      resolve();
+
+    });
+  });
+};
+
+
+const unpause = (container) => {
+
+  return new Promise((resolve, reject) => {
+    shell.exec('docker unpause ' + container, (code, stdout, stderr) => {
+
+      resolve();
+
+    });
+  });
+};
+
+
+
 const commit = (container, imageName) => {
 
   return new Promise((resolve, reject) => {
@@ -86,7 +136,7 @@ const backupVolumes = (container, containerName, volumes, dest) => {
 
     volumes.forEach(function(volume) {
       if (volume.Source.indexOf('docker.sock') === -1) {
-        var volumeName = volume.Name || volume.Source.split('/').join('_');
+        var volumeName = volume.Name || volume.Destination.split('/').join('_');
         command += ' tar cvf /backup/' + containerName + '_volume_' + volumeName + '.tar ' + volume.Destination;
       }
     });
@@ -146,6 +196,7 @@ program
     var imageName;
     var volumes;
 
+
     inspect(container)
       .then(config => {
         containerConfig = config;
@@ -161,7 +212,9 @@ program
       })
       .then(() => commit(container, imageName))
       .then(() => backupImage(imageName, dest))
+      .then(() => pause(container))
       .then(() => backupVolumes(container, containerName, volumes, dest))
+      .then(() => unpause(container))
       .then(() => backupRunCommand(container, containerName, dest));
   });
 
