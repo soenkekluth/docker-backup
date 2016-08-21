@@ -3,7 +3,6 @@
 'use strict'
 
 const program = require('commander');
-const cmd = require('node-cmd');
 const path = require('path');
 const rekcod = require('rekcod');
 const shell = require('shelljs');
@@ -19,8 +18,8 @@ const inspect = (container) => {
 
       resolve(JSON.parse(stdout)[0]);
     });
-  })
-}
+  });
+};
 
 const commit = (container, imageName) => {
 
@@ -34,8 +33,8 @@ const commit = (container, imageName) => {
       resolve(stdout);
 
     });
-  })
-}
+  });
+};
 
 
 const backupImage = (imageName, dest) => {
@@ -47,8 +46,8 @@ const backupImage = (imageName, dest) => {
       }
       resolve(stdout);
     });
-  })
-}
+  });
+};
 
 
 const backupRunCommand = (container, containerName, dest) => {
@@ -58,15 +57,15 @@ const backupRunCommand = (container, containerName, dest) => {
       return console.error(err);
     }
 
-    console.log(path.resolve(dest, containerName + '_run.sh'));
+    // console.log(path.resolve(dest, containerName + '_run.sh'));
     var script = '#!/bin/bash\n\n';
     script += run[0].command;
 
-    // shell.touch(path.resolve(dest, containerName + '_run.sh'));
+    shell.touch(path.resolve(dest, containerName + '_run.sh'));
     shell.exec('echo "' + script + '" > ' + path.resolve(dest, containerName + '_run.sh'), { silent: true });
     shell.chmod('+x', path.resolve(dest, containerName + '_run.sh'));
-    // console.log('\n\nwriting run script to ' + dest + '/' + containerName + '_run.sh');
-    // console.log('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + containerName + '_image');
+    shell.echo('\n\nwriting run script to ' + dest + '/' + containerName + '_run.sh');
+    shell.echo('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + containerName + '_image');
     return true;
   });
 };
@@ -74,9 +73,9 @@ const backupRunCommand = (container, containerName, dest) => {
 
 const backupVolumes = (container, containerName, volumes, dest) => {
 
-  containerName = containerName || container;
-
   return new Promise((resolve, reject) => {
+
+    containerName = containerName || container;
 
     if (!volumes) {
       reject();
@@ -87,17 +86,19 @@ const backupVolumes = (container, containerName, volumes, dest) => {
 
     volumes.forEach(function(volume) {
       if (volume.Source.indexOf('docker.sock') === -1) {
-        const volumeName = volume.Name || volume.Source.split('/').join('_');
+        var volumeName = volume.Name || volume.Source.split('/').join('_');
         command += ' tar cvf /backup/' + containerName + '_volume_' + volumeName + '.tar ' + volume.Destination;
       }
     });
 
+
     shell.exec(command, (code, stdout, stderr) => {
-      if (stderr) {
-        reject(stderr);
-        return;
-      }
-      resolve(stdout);
+      // console.log(code, stdout, stderr);
+      // if (stderr) {
+      //   reject(stderr);
+      //   return;
+      // }
+      resolve();
     });
   });
 };
@@ -153,7 +154,7 @@ program
         imageName = containerName + '_image';
         volumes = containerConfig.Mounts;
 
-        // shell.touch(path.resolve(dest, containerName + '_config.json'));
+        shell.touch(path.resolve(dest, containerName + '_config.json'));
         shell.exec('echo "' + JSON.stringify(config, null, 2) + '" > ' + path.resolve(dest, containerName + '_config.json'), { silent: true });
 
         return containerConfig;
@@ -170,11 +171,9 @@ program
   .action((src, container) => {
 
     if (src.indexOf('_image.tar') > 0) {
-
-      cmd.get('docker load -i ' + src, console.log);
-
+      shell.exec('docker load -i ' + src);
     } else if (src.indexOf('_run.sh') > 0) {
-      cmd.get('bash ' + src, console.log);
+      // cmd.get('bash ' + src, console.log);
     } else if (src.indexOf('_volume_') > 0) {
 
       var dir = path.dirname(src);
@@ -185,7 +184,7 @@ program
       inspect(containerName)
         .then(config => {
           var image = config.Config.Image;
-          cmd.get('docker run --rm --volumes-from ' + containerName + ' -v ' + dir + ':/backup ' + image + ' bash -c "cd / && tar xvf /backup/' + baseName + '"', console.log);
+          shell.exec('docker run --rm --volumes-from ' + containerName + ' -v ' + dir + ':/backup ' + image + ' bash -c "cd / && tar xvf /backup/' + baseName + '"');
         });
     }
   });

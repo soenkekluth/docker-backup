@@ -1,6 +1,6 @@
 {
   "name": "docker-backup",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "description": "backup docker container with its volumes",
   "main": "index.js",
   "bin": {
@@ -21,7 +21,6 @@
   "homepage": "https://github.com/soenkekluth/docker-backup#readme",
   "dependencies": {
     "commander": "2.9.0",
-    "node-cmd": "1.1.1",
     "rekcod": "0.2.1",
     "shelljs": "0.7.3"
   }
