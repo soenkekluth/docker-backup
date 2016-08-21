@@ -8,31 +8,25 @@ backup a docker container including its volumes
 ## Usage
 
 ### Backup
-`docker-backup backup <container> [path]`
+`docker-backup <container> [dest] [--name newname]`
 
 ### Restore Image
 `docker-backup restore <path-to-image.tar>`
 
 ### Restore Volume
-`docker-backup restore <path-to-volume.tar> [container]`
+`docker-backup restore <path-to-volume.tar> [container name]`
 
 
 ## Example
 
 ``docker run --name some-ghost -p 8080:2368 -d ghost``
 
-``docker stop some-ghost``
+``docker-backup some-ghost /backups --name ghost-backup``
 
-``docker-backup backup some-ghost``
+``docker-backup restore /backups/ghost-backup_image.tar``
 
-``docker rm some-ghost``
+``docker create --name new-ghost -p 8080:2368 ghost-backup_image``
 
-``docker-backup restore $(pwd)/some-ghost_image.tar``
+``docker-backup restore /backups/ghost-backup_volume_xx.tar new-ghost``
 
-``docker run --name some-ghost -p 8080:2368 -d some-ghost_image``
-
-``docker stop some-ghost``
-
-``docker-backup restore $(pwd)/some-ghost_volume.tar some-ghost``
-
-``docker start some-ghost``
+``docker start new-ghost``
