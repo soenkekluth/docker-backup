@@ -201,7 +201,7 @@ program
       .then(config => {
         containerConfig = config;
         container = containerConfig.Name ? String(containerConfig.Name).split('/').join('') : container;
-        containerName = options.name || container;
+        containerName = (typeof options.name === 'string') ? options.name : container;
         imageName = containerName + '_image';
         volumes = containerConfig.Mounts;
 
