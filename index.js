@@ -94,7 +94,9 @@ const backupImage = (imageName, dest) => {
         reject(stderr);
         return;
       }
-      resolve(stdout);
+      shell.exec('docker rmi ' + imageName, (code, stdout, stderr) => {
+        resolve(stdout);
+      });
     });
   });
 };
