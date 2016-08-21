@@ -170,16 +170,16 @@ program
   .command('restore <src> [container]')
   .action((src, container) => {
 
+    var dir = path.dirname(src);
+    dir = path.resolve(dir);
+    var baseName = path.basename(src);
+    var containerName = container || baseName.substr(0, baseName.indexOf('_'));
+
     if (src.indexOf('_image.tar') > 0) {
       shell.exec('docker load -i ' + src);
     } else if (src.indexOf('_run.sh') > 0) {
       // cmd.get('bash ' + src, console.log);
     } else if (src.indexOf('_volume_') > 0) {
-
-      var dir = path.dirname(src);
-      dir = path.resolve(dir);
-      var baseName = path.basename(src);
-      var containerName = container || baseName.substr(0, baseName.indexOf('_'));
 
       inspect(containerName)
         .then(config => {
