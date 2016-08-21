@@ -6,19 +6,49 @@ const program = require('commander');
 const cmd = require('node-cmd');
 const path = require('path');
 const rekcod = require('rekcod');
-
-const inspect = (container) =>
-  new Promise((resolve, reject) =>
-    cmd.get('docker inspect ' + container, data => resolve(JSON.parse(data)[0])));
-
-const commit = (container, imageName) =>
-  new Promise((resolve, reject) =>
-    cmd.get('docker commit -p ' + container + ' ' + imageName, resolve));
+const shell = require('shelljs');
 
 
-const backupImage = (imageName, dest) =>
-  new Promise((resolve, reject) =>
-    cmd.get('docker save -o ' + path.resolve(dest , imageName + '.tar') +' '+ imageName, resolve));
+const inspect = (container) => {
+  return new Promise((resolve, reject) => {
+    shell.exec('docker inspect ' + container, { silent: true }, (code, stdout, stderr) => {
+      if (stderr) {
+        reject(stderr);
+        return;
+      }
+
+      resolve(JSON.parse(stdout)[0]);
+    });
+  })
+}
+
+const commit = (container, imageName) => {
+
+  return new Promise((resolve, reject) => {
+    shell.exec('docker commit -p ' + container + ' ' + imageName, (code, stdout, stderr) => {
+
+      if (stderr) {
+        reject(stderr);
+        return;
+      }
+      resolve(stdout);
+
+    });
+  })
+}
+
+
+const backupImage = (imageName, dest) => {
+  return new Promise((resolve, reject) => {
+    shell.exec('docker save -o ' + path.resolve(dest, imageName + '.tar') + ' ' + imageName, (code, stdout, stderr) => {
+      if (stderr) {
+        reject(stderr);
+        return;
+      }
+      resolve(stdout);
+    });
+  })
+}
 
 
 const backupRunCommand = (container, containerName, dest) => {
@@ -28,27 +58,31 @@ const backupRunCommand = (container, containerName, dest) => {
       return console.error(err);
     }
 
-    console.log(path.resolve(dest , containerName + '_run.sh'));
-    var sript = '#!/bin/bash\n\n';
-    sript += run[0].command;
-    cmd.get('echo "' + sript + '" > ' + path.resolve(dest , containerName + '_run.sh'), () => {
-      cmd.run('chmod +x ' + path.resolve(dest , containerName + '_run.sh'));
-      console.log('\n\nwriting run script to ' + dest + '/' + containerName + '_run.sh');
-      console.log('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + containerName + '_image');
-    });
-    Promise.resolve(sript);
+    console.log(path.resolve(dest, containerName + '_run.sh'));
+    var script = '#!/bin/bash\n\n';
+    script += run[0].command;
+
+    // shell.touch(path.resolve(dest, containerName + '_run.sh'));
+    shell.exec('echo "' + script + '" > ' + path.resolve(dest, containerName + '_run.sh'), { silent: true });
+    shell.chmod('+x', path.resolve(dest, containerName + '_run.sh'));
+    // console.log('\n\nwriting run script to ' + dest + '/' + containerName + '_run.sh');
+    // console.log('at the moment you need to edit the script as it was created rekcod from npm.\nplease make shure you change the --name, remove the -h option and change the image name to ' + containerName + '_image');
+    return true;
   });
 };
 
 
 const backupVolumes = (container, containerName, volumes, dest) => {
-  if (!volumes) {
-    return Promise.resolve();
-  }
 
   containerName = containerName || container;
 
   return new Promise((resolve, reject) => {
+
+    if (!volumes) {
+      reject();
+      return;
+    }
+
     var command = 'docker run --rm --volumes-from ' + container + ' -v ' + dest + ':/backup alpine';
 
     volumes.forEach(function(volume) {
@@ -58,7 +92,13 @@ const backupVolumes = (container, containerName, volumes, dest) => {
       }
     });
 
-    cmd.get(command, resolve);
+    shell.exec(command, (code, stdout, stderr) => {
+      if (stderr) {
+        reject(stderr);
+        return;
+      }
+      resolve(stdout);
+    });
   });
 };
 
@@ -89,7 +129,6 @@ const backupVolumes = (container, containerName, volumes, dest) => {
 //   .action(cmd.get('docker volume ls', console.log));
 
 program
-  // .command('backup <container> [dest]')
   .arguments('<container> [dest]')
   .description('run setup commands for all envs')
   .option('-n, --name [name]', 'name')
@@ -98,7 +137,8 @@ program
     dest = dest || './';
     dest = path.resolve(dest);
 
-    console.log('backup ' + container + ' to ' + dest);
+    shell.echo('backup ' + container + ' to ' + dest);
+    shell.mkdir('-p', dest);
 
     var containerConfig;
     var containerName;
@@ -108,19 +148,21 @@ program
     inspect(container)
       .then(config => {
         containerConfig = config;
-        container = String(containerConfig.Name).split('/').join('');
+        container = containerConfig.Name ? String(containerConfig.Name).split('/').join('') : container;
         containerName = options.name || container;
         imageName = containerName + '_image';
         volumes = containerConfig.Mounts;
 
-        cmd.run('echo "' + JSON.stringify(config, null, 2) + '" > ' + path.resolve( dest, containerName + '_config.json'));
+        // shell.touch(path.resolve(dest, containerName + '_config.json'));
+        shell.exec('echo "' + JSON.stringify(config, null, 2) + '" > ' + path.resolve(dest, containerName + '_config.json'), { silent: true });
 
-        commit(container, imageName)
-          .then(backupImage(imageName, dest))
-          .then(backupVolumes(container, containerName, volumes, dest))
-          .then(backupRunCommand(container, containerName, dest));
-      });
-  })
+        return containerConfig;
+      })
+      .then(() => commit(container, imageName))
+      .then(() => backupImage(imageName, dest))
+      .then(() => backupVolumes(container, containerName, volumes, dest))
+      .then(() => backupRunCommand(container, containerName, dest));
+  });
 
 
 program
