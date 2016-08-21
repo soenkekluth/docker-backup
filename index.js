@@ -15,41 +15,31 @@ const inspect = (container) => {
         reject(stderr);
         return;
       }
-
       resolve(JSON.parse(stdout)[0]);
     });
   });
 };
 
 const pause = (container) => {
-
   return new Promise((resolve, reject) => {
     shell.exec('docker pause ' + container, (code, stdout, stderr) => {
-
       resolve();
-
     });
   });
 };
 
 const stop = (container) => {
-
   return new Promise((resolve, reject) => {
     shell.exec('docker stop ' + container, (code, stdout, stderr) => {
-
       resolve();
-
     });
   });
 };
 
 const start = (container) => {
-
   return new Promise((resolve, reject) => {
     shell.exec('docker start ' + container, (code, stdout, stderr) => {
-
       resolve();
-
     });
   });
 };
@@ -66,17 +56,13 @@ const unpause = (container) => {
 };
 
 const commit = (container, imageName) => {
-
   return new Promise((resolve, reject) => {
     shell.exec('docker commit -p ' + container + ' ' + imageName, (code, stdout, stderr) => {
-
       if (stderr) {
         reject(stderr);
         return;
       }
-
       resolve(stdout);
-
     });
   });
 };
@@ -88,7 +74,6 @@ const backupImage = (imageName, dest) => {
         reject(stderr);
         return;
       }
-
       shell.exec('docker rmi ' + imageName, (code, stdout, stderr) => {
         resolve(stdout);
       });
@@ -137,11 +122,6 @@ const backupVolumes = (container, containerName, volumes, dest) => {
     });
 
     shell.exec(command, (code, stdout, stderr) => {
-      // console.log(code, stdout, stderr);
-      // if (stderr) {
-      //   reject(stderr);
-      //   return;
-      // }
       resolve();
     });
   });
@@ -151,27 +131,7 @@ const backupVolumes = (container, containerName, volumes, dest) => {
 // program
 //   .version('0.0.1');
 
-// program
-//   .command('container')
-//   .description('run setup commands for all envs')
-//   .option('-a, --all', 'show all')
-//   .action(options => {
-//     const opt = options.all ? ' -a' : '';
-//     cmd.get('docker ps' + opt, console.log);
-//   });
 
-
-// program
-//   .command('images')
-//   .option('-a, --all', 'show all')
-//   .action(options => {
-//     const opt = options.all ? ' -a' : '';
-//     cmd.get('docker images' + opt, console.log);
-//   });
-
-// program
-//   .command('volumes')
-//   .action(cmd.get('docker volume ls', console.log));
 
 program
   .arguments('<container> [dest]')
@@ -233,5 +193,30 @@ program
         });
     }
   });
+
+
+  // program
+  //   .command('container')
+  //   .description('run setup commands for all envs')
+  //   .option('-a, --all', 'show all')
+  //   .action(options => {
+  //     const opt = options.all ? ' -a' : '';
+  //     cmd.get('docker ps' + opt, console.log);
+  //   });
+
+
+  // program
+  //   .command('images')
+  //   .option('-a, --all', 'show all')
+  //   .action(options => {
+  //     const opt = options.all ? ' -a' : '';
+  //     cmd.get('docker images' + opt, console.log);
+  //   });
+
+  // program
+  //   .command('volumes')
+  //   .action(cmd.get('docker volume ls', console.log));
+
+
 
 program.parse(process.argv);
