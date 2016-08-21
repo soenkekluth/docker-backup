@@ -7,7 +7,6 @@ const path = require('path');
 const rekcod = require('rekcod');
 const shell = require('shelljs');
 
-
 const inspect = (container) => {
   return new Promise((resolve, reject) => {
     //docker inspect --format='{{json .Config}}'
@@ -22,8 +21,6 @@ const inspect = (container) => {
   });
 };
 
-
-
 const pause = (container) => {
 
   return new Promise((resolve, reject) => {
@@ -34,7 +31,6 @@ const pause = (container) => {
     });
   });
 };
-
 
 const stop = (container) => {
 
@@ -58,7 +54,6 @@ const start = (container) => {
   });
 };
 
-
 const unpause = (container) => {
 
   return new Promise((resolve, reject) => {
@@ -70,8 +65,6 @@ const unpause = (container) => {
   });
 };
 
-
-
 const commit = (container, imageName) => {
 
   return new Promise((resolve, reject) => {
@@ -81,12 +74,12 @@ const commit = (container, imageName) => {
         reject(stderr);
         return;
       }
+
       resolve(stdout);
 
     });
   });
 };
-
 
 const backupImage = (imageName, dest) => {
   return new Promise((resolve, reject) => {
@@ -95,13 +88,13 @@ const backupImage = (imageName, dest) => {
         reject(stderr);
         return;
       }
+
       shell.exec('docker rmi ' + imageName, (code, stdout, stderr) => {
         resolve(stdout);
       });
     });
   });
 };
-
 
 const backupRunCommand = (container, containerName, dest) => {
   rekcod(container, (err, run) => {
@@ -123,7 +116,6 @@ const backupRunCommand = (container, containerName, dest) => {
   });
 };
 
-
 const backupVolumes = (container, containerName, volumes, dest) => {
 
   return new Promise((resolve, reject) => {
@@ -143,7 +135,6 @@ const backupVolumes = (container, containerName, volumes, dest) => {
         command += ' tar cvf /backup/' + containerName + '_volume_' + volumeName + '.tar ' + volume.Destination;
       }
     });
-
 
     shell.exec(command, (code, stdout, stderr) => {
       // console.log(code, stdout, stderr);
@@ -199,7 +190,6 @@ program
     var imageName;
     var volumes;
 
-
     inspect(container)
       .then(config => {
         containerConfig = config;
@@ -220,7 +210,6 @@ program
       .then(() => unpause(container))
       .then(() => backupRunCommand(container, containerName, dest));
   });
-
 
 program
   .command('restore <src> [container]')
