@@ -10,6 +10,7 @@ const shell = require('shelljs');
 
 const inspect = (container) => {
   return new Promise((resolve, reject) => {
+    //docker inspect --format='{{json .Config}}'
     shell.exec('docker inspect ' + container, { silent: true }, (code, stdout, stderr) => {
       if (stderr) {
         reject(stderr);
