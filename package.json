@@ -20,8 +20,8 @@
   },
   "homepage": "https://github.com/soenkekluth/docker-backup#readme",
   "dependencies": {
-    "commander": "2.9.0",
-    "rekcod": "0.2.1",
-    "shelljs": "0.7.3"
+    "commander": "2.11.0",
+    "rekcod": "2.0.1",
+    "shelljs": "0.7.8"
   }
 }
