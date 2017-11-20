@@ -1,5 +1,7 @@
 # docker-backup
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/soenkekluth/docker-backup.svg)](https://greenkeeper.io/)
+
 backup a docker container including its volumes
 
 ## Install
